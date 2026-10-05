@@ -2,7 +2,7 @@ import {DEFAULTS,cleanConfig} from './levels.js';
 export const STORAGE_KEY='signal-lab-progress-v1';
 export function normalizeState(raw){
  const valid=raw&&raw.version===1;const state={version:1,progress:{},reduceMotion:valid&&raw.reduceMotion===true};
- for(let id=1;id<=8;id++){const p=valid&&raw.progress?.[id];state.progress[id]={config:cleanConfig(id,p?.config),completed:p?.completed===true,hint:Number.isFinite(p?.hint)?Math.min(3,Math.max(0,Math.floor(p.hint))):0,proof:p?.proof===true};}
+ for(let id=1;id<=8;id++){const p=valid&&raw.progress?.[id];const config=cleanConfig(id,p?.config);const keys=Object.keys(DEFAULTS[id]).filter(k=>k!=='order');const legacy=p?.config&&typeof p.config==='object'&&!Array.isArray(p.config)&&!p.draft;const used=new Set();const orderSlots=(DEFAULTS[id].order||[]).map((_,i)=>{const value=legacy?config.order[i]:p?.draft?.orderSlots?.[i];if(!config.order.includes(value)||used.has(value))return null;used.add(value);return value});const placed=legacy?keys:keys.filter(k=>Array.isArray(p?.draft?.placed)&&p.draft.placed.includes(k));state.progress[id]={config,draft:{placed,orderSlots},completed:p?.completed===true,hint:Number.isFinite(p?.hint)?Math.min(3,Math.max(0,Math.floor(p.hint))):0,proof:p?.proof===true};}
  return state;
 }
 export function createStore(storage){
