@@ -1,0 +1,11 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {getLevel,DEFAULTS,SOLUTIONS,buildProgram,validateLevel} from '../src/levels.js';
+import {execute} from '../src/engine.js';
+for(let i=1;i<=8;i++)test(`stage ${i} reference solution passes every stated case`,()=>{const r=validateLevel(i,SOLUTIONS[i],true);assert.equal(r.passed,true,JSON.stringify(r));assert.ok(r.results.length>=3);});
+for(let i=1;i<=8;i++)test(`stage ${i} initial puzzle remains unsolved`,()=>assert.equal(validateLevel(i,DEFAULTS[i],false).passed,false));
+test('stage 7 cannot skip counterexample evidence',()=>{assert.equal(validateLevel(7,SOLUTIONS[7],false).passed,false);assert.equal(validateLevel(7,SOLUTIONS[7],true).passed,true)});
+test('stage 5 charge before normalization and inner reset are each rejected',()=>{for(const cfg of [{...SOLUTIONS[5],charge:'before'},{...SOLUTIONS[5],init:'inside'}])assert.equal(validateLevel(5,cfg,true).passed,false)});
+test('stage 6 both channels really call one function',()=>{assert.equal(validateLevel(6,{...SOLUTIONS[6],callB:'basic'},true).passed,false)});
+test('stage 8 all wrong stop placements consume forbidden tail and fail',()=>{for(const stop of ['none','inside'])assert.equal(validateLevel(8,{...SOLUTIONS[8],stop},true).passed,false)});
+test('getLevel rejects unknown stage and buildProgram rejects invalid card config',()=>{assert.throws(()=>getLevel(99));assert.throws(()=>buildProgram(1,{order:['read']}));});
+test('reference outputs match named stage 8 example',()=>{const r=execute(buildProgram(8,SOLUTIONS[8]),['100','!111','010','END','101']);assert.deepEqual(r.final.outputs,['101','001']);assert.equal(r.final.energy,3);assert.equal(r.final.position,4)});
